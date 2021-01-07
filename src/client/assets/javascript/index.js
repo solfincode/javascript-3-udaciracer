@@ -76,20 +76,33 @@ async function delay(ms) {
 // This async function controls the flow of the race, add the logic and error handling
 async function handleCreateRace() {
   // render starting UI
-  renderAt("#race", renderRaceStartView());
 
-  // TODO - Get player_id and track_id from the store
-
-  // const race = TODO - invoke the API call to create the race, then save the result
-
-  // TODO - update the store with the race id
+  try {
+    // TODO - Get player_id and track_id from the store
+    let { player_id, track_id } = store;
+    // const race = TODO - invoke the API call to create the race, then save the result
+    const race = await createRace(store.player_id, store.track_id);
+    renderAt("#race", renderRaceStartView(race));
+    console.log("race", race);
+    // TODO - update the store with the race id
+    const data = {
+      track_id: race.Track.id,
+      player_id: race.PlayerID,
+      race_id: race.ID,
+    };
+    Object.assign(store, data);
+    console.log("store", store);
+  } catch (err) {
+    console.log(err);
+  }
 
   // The race has been created, now start the countdown
   // TODO - call the async function runCountdown
-
+  runCountdown();
   // TODO - call the async function startRace
-
+  startRace(store.player_id);
   // TODO - call the async function runRace
+  runRace();
 }
 
 function runRace(raceID) {
@@ -119,11 +132,14 @@ async function runCountdown() {
 
     return new Promise((resolve) => {
       // TODO - use Javascript's built in setInterval method to count down once per second
-
+      const countDown = setTimeout(() => console.log("countdown"), 1000);
       // run this DOM manipulation to decrement the countdown for the user
       document.getElementById("big-numbers").innerHTML = --timer;
-
       // TODO - if the countdown is done, clear the interval, resolve the promise, and return
+      if (timer === 0) {
+        clearInterval(countDown);
+        resolve();
+      }
     });
   } catch (error) {
     console.log(error);
@@ -163,6 +179,7 @@ function handleSelectTrack(target) {
 function handleAccelerate() {
   console.log("accelerate button clicked");
   // TODO - Invoke the API call to accelerate
+  accelerate(id);
 }
 
 // HTML VIEWS ------------------------------------------------
@@ -317,43 +334,44 @@ function defaultFetchOpts() {
 
 async function getTracks() {
   // GET request to `${SERVER}/api/tracks`
-  const tracks = await fetch(`${SERVER}/api/tracks`)
+  return await fetch(`${SERVER}/api/tracks`)
     .then((res) => res.json())
     .then((data) => {
       return data;
     })
     .catch((err) => console.log(err));
-  return tracks;
 }
 
 async function getRacers() {
   // GET request to `${SERVER}/api/cars`
-  const racers = await fetch(`${SERVER}/api/cars`)
+  return await fetch(`${SERVER}/api/cars`)
     .then((res) => res.json())
     .then((data) => {
       return data;
     })
     .catch((err) => console.log(err));
-  return racers;
 }
 
 function createRace(player_id, track_id) {
   player_id = parseInt(player_id);
   track_id = parseInt(track_id);
-  const body = { player_id, track_id };
+  const data = { player_id, track_id };
 
   return fetch(`${SERVER}/api/races`, {
     method: "POST",
     ...defaultFetchOpts(),
     dataType: "jsonp",
-    body: JSON.stringify(body),
+    body: JSON.stringify(data),
   })
     .then((res) => res.json())
     .catch((err) => console.log("Problem with createRace request::", err));
 }
 
-function getRace(id) {
+async function getRace(id) {
   // GET request to `${SERVER}/api/races/${id}`
+  await fetch(`${SERVER}/api/races/${id}`)
+    .then((res) => res.json())
+    .catch((err) => console.log(err));
 }
 
 function startRace(id) {
@@ -365,8 +383,12 @@ function startRace(id) {
     .catch((err) => console.log("Problem with getRace request::", err));
 }
 
-function accelerate(id) {
+async function accelerate(id) {
   // POST request to `${SERVER}/api/races/${id}/accelerate`
-  // options parameter provided as defaultFetchOpts
-  // no body or datatype needed for this request
+  return await fetch(`${SERVER}/api/races/${id}/accelerate`, {
+    method: "POST",
+    // options parameter provided as defaultFetchOpts
+    ...defaultFetchOpts(),
+    // no body or datatype needed for this request
+  });
 }
