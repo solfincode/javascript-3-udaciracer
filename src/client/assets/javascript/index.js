@@ -49,9 +49,21 @@ function setupClickHandlers() {
       // Submit create race form
       if (target.matches("#submit-create-race")) {
         event.preventDefault();
-
-        // start race
-        handleCreateRace();
+        const race = createRace(store.player_id, store.track_id);
+        race
+          .then((el) => {
+            // // TODO - update the store with the race id
+            const data = {
+              track_id: el.Track.id,
+              player_id: el.PlayerID,
+              race_id: el.ID,
+            };
+            Object.assign(store, data);
+            // start race
+            handleCreateRace();
+          })
+          .catch((err) => console.log(err));
+        // TODO - update the store with the race id
       }
 
       // Handle acceleration click
@@ -79,27 +91,19 @@ async function handleCreateRace() {
 
   try {
     // TODO - Get player_id and track_id from the store
-    const player_id = store.player_id;
-    const track_id = store.track_id;
+    const { player_id, track_id, race_id } = store;
+    console.log("race_id", race_id);
     // const race = TODO - invoke the API call to create the race, then save the result
     const race = await createRace(player_id, track_id);
     renderAt("#race", renderRaceStartView(race.Track, race.Cars));
-    console.log("race", race);
-    // TODO - update the store with the race id
-    const data = {
-      track_id: race.Track.id,
-      player_id: race.PlayerID,
-      race_id: race.ID,
-    };
-    Object.assign(store, data);
-    console.log("store", store);
+
     // The race has been created, now start the countdown
     // TODO - call the async function runCountdown
     await runCountdown();
     // TODO - call the async function startRace
-    await startRace(store.race_id);
+    await startRace(race_id);
     // TODO - call the async function runRace
-    await runRace(store.race_id);
+    await runRace(race_id);
   } catch (err) {
     console.log(err);
   }
@@ -176,7 +180,7 @@ function handleSelectPodRacer(target) {
   target.classList.add("selected");
 
   // TODO - save the selected racer to the store
-  store.race_id = target.id;
+  store.race_id = parseInt(target.id);
 }
 
 function handleSelectTrack(target) {
@@ -192,7 +196,7 @@ function handleSelectTrack(target) {
   target.classList.add("selected");
 
   // TODO - save the selected track id to the store
-  store.track_id = target.id;
+  store.track_id = parseInt(target.id);
 }
 
 async function handleAccelerate() {
@@ -373,11 +377,10 @@ async function createRace(player_id, track_id) {
   player_id = parseInt(player_id);
   track_id = parseInt(track_id);
   const data = { player_id, track_id };
-  console.log("data", data);
   return await fetch(`${SERVER}/api/races`, {
     method: "POST",
     ...defaultFetchOpts(),
-    dataType: "json",
+    dataType: "jsonp",
     body: JSON.stringify(data),
   })
     .then((res) => res.json())
@@ -396,7 +399,7 @@ async function startRace(id) {
     method: "POST",
     ...defaultFetchOpts(),
   })
-    // .then((res) => res.json())
+    .then((res) => res.json())
     .catch((err) => console.log("Problem with getRace request::", err));
 }
 
