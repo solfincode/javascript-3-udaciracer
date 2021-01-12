@@ -49,21 +49,7 @@ function setupClickHandlers() {
       // Submit create race form
       if (target.matches("#submit-create-race")) {
         event.preventDefault();
-        const race = createRace(store.player_id, store.track_id);
-        race
-          .then((el) => {
-            // // TODO - update the store with the race id
-            const data = {
-              track_id: el.Track.id,
-              player_id: el.PlayerID,
-              race_id: el.ID,
-            };
-            Object.assign(store, data);
-            // start race
-            handleCreateRace();
-          })
-          .catch((err) => console.log(err));
-        // TODO - update the store with the race id
+        handleCreateRace();
       }
 
       // Handle acceleration click
@@ -91,12 +77,18 @@ async function handleCreateRace() {
 
   try {
     // TODO - Get player_id and track_id from the store
-    const { player_id, track_id, race_id } = store;
-    console.log("race_id", race_id);
+    let player_id = store.player_id;
+    let track_id = store.track_id;
+    let race_id = store.race_id;
     // const race = TODO - invoke the API call to create the race, then save the result
     const race = await createRace(player_id, track_id);
-    renderAt("#race", renderRaceStartView(race.Track, race.Cars));
+    console.log("race", race);
+    // TODO - update the store with the race id
+    player_id = race.PlayerID;
+    race_id = parseInt(race.ID) - 1;
 
+    renderAt("#race", renderRaceStartView(race.Track, race.Cars));
+    console.log("raceid", store.race_id);
     // The race has been created, now start the countdown
     // TODO - call the async function runCountdown
     await runCountdown();
@@ -116,7 +108,6 @@ function runRace(raceID) {
       const raceInterval = setInterval(async () => {
         await getRace(raceID)
           .then((data) => {
-            console.log("data", data);
             /* 
               TODO - if the race info status property is "in-progress", update the leaderboard by calling:
               renderAt('#leaderBoard', raceProgress(res.positions))
