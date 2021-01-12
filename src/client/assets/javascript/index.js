@@ -192,10 +192,10 @@ function handleSelectTrack(target) {
   store.track_id = parseInt(target.id);
 }
 
-async function handleAccelerate() {
+function handleAccelerate() {
   console.log("accelerate button clicked");
   // TODO - Invoke the API call to accelerate
-  await accelerate(store.player_id);
+  accelerate(store.player_id);
 }
 
 // HTML VIEWS ------------------------------------------------
@@ -393,9 +393,9 @@ function startRace(id) {
   }).catch((err) => console.log("Problem with getRace request::", err));
 }
 
-async function accelerate(id) {
+function accelerate(id) {
   // POST request to `${SERVER}/api/races/${id}/accelerate`
-  return await fetch(`${SERVER}/api/races/${id}/accelerate`, {
+  return fetch(`${SERVER}/api/races/${id}/accelerate`, {
     method: "POST",
     // options parameter provided as defaultFetchOpts
     ...defaultFetchOpts(),
