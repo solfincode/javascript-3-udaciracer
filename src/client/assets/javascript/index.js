@@ -195,7 +195,7 @@ function handleSelectTrack(target) {
 function handleAccelerate() {
   console.log("accelerate button clicked");
   // TODO - Invoke the API call to accelerate
-  accelerate(store.player_id);
+  accelerate(store.track_id - 1);
 }
 
 // HTML VIEWS ------------------------------------------------
